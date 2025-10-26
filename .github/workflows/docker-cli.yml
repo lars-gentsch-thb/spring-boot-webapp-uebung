@@ -87,7 +87,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/demo
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -111,4 +111,3 @@ jobs:
         run: |
           echo "Docker images pushed to DockerHub:"
           echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n'
-
