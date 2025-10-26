@@ -89,7 +89,9 @@ Die Anwendung läuft dann auf: http://localhost:8080
 
 ## 🐳 Docker
 
-### Mit Jib (empfohlen)
+### Option 1: Mit Jib (empfohlen)
+
+Jib erstellt Docker-Images ohne Docker-Daemon - schneller und effizienter.
 
 ```bash
 # Docker-Image in lokalen Docker-Daemon bauen
@@ -102,19 +104,140 @@ mvn compile jib:build
 mvn compile jib:buildTar
 ```
 
+Weitere Details siehe [JIB-USAGE.md](JIB-USAGE.md)
+
+### Option 2: Mit klassischem Dockerfile
+
+Der Dockerfile verwendet ein bereits gebautes JAR - Sie müssen zuerst mit Maven bauen.
+
+**Vorteile:**
+- ✅ Klare Trennung von Build und Container-Erstellung
+- ✅ Kleineres finales Image (nur JRE, kein JDK)
+- ✅ Security: Läuft als non-root User
+- ✅ Integrierter Health-Check
+- ✅ Schneller Build (nur Copy, kein Compile)
+
+**Build und Run:**
+```bash
+# Schritt 1: JAR mit Maven bauen
+mvn clean package
+
+# Schritt 2: Docker-Image erstellen
+docker build -t demo-app:latest .
+
+# Schritt 3: Container starten
+docker run -p 8080:8080 demo-app:latest
+
+# Mit Environment-Variablen
+docker run -p 8080:8080 \
+  -e SPRING_APPLICATION_NAME=my-demo \
+  demo-app:latest
+
+# Im Hintergrund starten
+docker run -d -p 8080:8080 --name demo-container demo-app:latest
+
+# Logs anzeigen
+docker logs demo-container
+
+# Health-Check Status
+docker inspect --format='{{.State.Health.Status}}' demo-container
+```
+
+### Docker-Befehle - Übersicht
+
+```bash
+# JAR bauen und Docker-Image erstellen
+mvn clean package
+docker build -t demo-app:latest .
+
+# Alle Images anzeigen
+docker images
+
+# Container starten
+docker run -p 8080:8080 demo-app:latest
+
+# Container im Hintergrund starten
+docker run -d -p 8080:8080 --name demo demo-app:latest
+
+# Laufende Container anzeigen
+docker ps
+
+# Container stoppen
+docker stop demo
+
+# Container entfernen
+docker rm demo
+
+# Image löschen
+docker rmi demo-app:latest
+
+# In laufenden Container einloggen
+docker exec -it demo sh
+
+# Container-Logs verfolgen
+docker logs -f demo
+
+# Image zu Registry pushen
+docker tag demo-app:latest registry.example.com/demo-app:latest
+docker push registry.example.com/demo-app:latest
+```
+
+### Dockerfile-Details
+
+**Base Image:** eclipse-temurin:17-jre-alpine  
+**Voraussetzung:** JAR muss mit `mvn clean package` bereits gebaut sein  
+**Security:** Läuft als non-root User (spring:spring)  
+**Health-Check:** Automatische Gesundheitsprüfung alle 30 Sekunden  
+**Image-Größe:** ~200MB (Alpine-basiert)
+
+**Vergleich der Methoden:**
+
+| Feature | Jib | Dockerfile |
+|---------|-----|------------|
+| Docker-Daemon nötig | ❌ Nein | ✅ Ja |
+| Maven-Build vorher | ⚠️ Optional | ✅ Erforderlich |
+| Build-Geschwindigkeit | ⚡ Sehr schnell | ⚡ Schnell |
+| Image-Größe | 📦 Klein | 📦 Klein |
+| Layer-Optimierung | ✅ Automatisch | ⚠️ Basic |
+| Reproduzierbarkeit | ✅ Hoch | ✅ Hoch |
+| Einfachheit | ✅ Sehr einfach | ✅ Einfach |
+| Lokal bauen | ✅ Ja | ✅ Ja |
+| Direkt zu Registry | ✅ Ja | ❌ Nein |
+
 ### Container starten
 
 ```bash
-docker run -p 8080:8080 cd/pipeline/demo:latest
-```
+# Standard
+docker run -p 8080:8080 demo-app:latest
 
-Weitere Details siehe [JIB-USAGE.md](JIB-USAGE.md)
+# Mit custom Port
+docker run -p 9090:8080 demo-app:latest
+
+# Mit Volume (für Logs)
+docker run -p 8080:8080 \
+  -v $(pwd)/logs:/app/logs \
+  demo-app:latest
+
+# Mit Environment-Variablen
+docker run -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e JAVA_OPTS="-Xmx1g" \
+  demo-app:latest
+
+# Mit Memory-Limits
+docker run -p 8080:8080 \
+  --memory="512m" \
+  --cpus="1.0" \
+  demo-app:latest
+```
 
 ## 🔄 CI/CD Pipeline
 
-Das Projekt enthält eine vollautomatische GitHub Actions Pipeline (`.github/workflows/main.yml`), die bei jedem Push auf den `master`-Branch ausgeführt wird.
+Das Projekt enthält **zwei vollautomatische GitHub Actions Pipelines**, die bei jedem Push auf den `master`-Branch ausgeführt werden.
 
-### Pipeline-Schritte:
+### Pipeline 1: CI/CD mit Jib (`.github/workflows/main.yml`)
+
+**Empfohlen für:** Schnelle Builds, direkte Registry-Pushes ohne Docker-Daemon
 
 #### Job 1: Build and Test
 1. ✅ Code auschecken
@@ -124,19 +247,16 @@ Das Projekt enthält eine vollautomatische GitHub Actions Pipeline (`.github/wor
 5. ✅ JAR-Datei paketieren
 6. ✅ Build-Artefakte hochladen
 
-#### Job 2: Docker Build & Push
+#### Job 2: Docker Build & Push (mit Jib)
 (Wird nur ausgeführt, wenn Job 1 erfolgreich war)
 
 1. ✅ Code auschecken
 2. ✅ JDK 17 einrichten
 3. ✅ Bei GitHub Container Registry anmelden
-4. ✅ Docker-Image mit Jib bauen und pushen
+4. ✅ Docker-Image mit Jib bauen und pushen zu **GitHub Packages (ghcr.io)**
 5. ✅ Image-Details ausgeben
 
-### Docker-Image abrufen
-
-Nach erfolgreichem Pipeline-Durchlauf ist das Image verfügbar unter:
-
+**Image abrufen:**
 ```bash
 # Latest Version
 docker pull ghcr.io/<github-username>/demo:latest
@@ -145,110 +265,108 @@ docker pull ghcr.io/<github-username>/demo:latest
 docker pull ghcr.io/<github-username>/demo:<commit-sha>
 ```
 
-## 🧪 Tests
+---
 
-Das Projekt enthält zwei Testklassen:
+### Pipeline 2: CI/CD mit Docker CLI (`.github/workflows/docker-cli.yml`)
 
-- **DemoApplicationTests** - Überprüft, ob der Spring Context korrekt lädt
-- **HelloControllerTest** - Testet die REST-Endpoints
+**Empfohlen für:** Standard Docker-Workflows, DockerHub-Integration
 
+#### Job 1: Build and Test
+1. ✅ Code auschecken
+2. ✅ JDK 17 einrichten
+3. ✅ Projekt kompilieren
+4. ✅ Unit Tests ausführen
+5. ✅ JAR-Datei paketieren
+6. ✅ JAR-Artefakt hochladen
+
+#### Job 2: Docker Build & Push (mit Docker CLI)
+(Wird nur ausgeführt, wenn Job 1 erfolgreich war)
+
+1. ✅ Code auschecken
+2. ✅ JAR-Artefakt herunterladen
+3. ✅ Docker Buildx einrichten
+4. ✅ Bei DockerHub anmelden
+5. ✅ Docker-Metadata extrahieren (Tags, Labels)
+6. ✅ Docker-Image bauen und zu **DockerHub** pushen
+7. ✅ Image-Details ausgeben
+
+**Automatische Tags:**
+- `latest` (nur auf master-Branch)
+- `<branch-name>-<commit-sha>` (z.B. `master-abc1234`)
+- Branch-Name (z.B. `master`)
+- PR-Nummer (bei Pull Requests)
+
+**Image abrufen:**
 ```bash
-# Alle Tests ausführen
-mvn test
+# Latest Version
+docker pull <dockerhub-username>/demo:latest
 
-# Nur bestimmte Tests
-mvn test -Dtest=HelloControllerTest
+# Spezifische Version
+docker pull <dockerhub-username>/demo:master-<commit-sha>
 ```
-
-## 📡 API-Endpoints
-
-### GET /
-Gibt eine Begrüßungsnachricht zurück.
-
-**Response:**
-```
-Greetings from demo!
-```
-
-### GET /something
-Gibt einen Status zurück.
-
-**Response:**
-```
-All Ok
-```
-
-## ⚙️ Konfiguration
-
-Die Anwendungskonfiguration befindet sich in `src/main/resources/application.properties`:
-
-```properties
-spring.application.name=demo
-```
-
-## 🔧 Technologie-Stack
-
-| Technologie | Version | Beschreibung |
-|------------|---------|--------------|
-| Spring Boot | 3.5.7 | Web-Framework |
-| Java | 17 | Programmiersprache |
-| Maven | 3.x | Build-Tool |
-| JUnit Jupiter | 6.0.0 | Testing-Framework |
-| Jib | 3.4.4 | Container-Builder |
-| GitHub Actions | - | CI/CD Platform |
-
-## 📝 Entwicklung
-
-### Neuen Endpoint hinzufügen
-
-1. Öffnen Sie `HelloController.java`
-2. Fügen Sie eine neue Methode mit `@GetMapping` oder `@PostMapping` hinzu:
-
-```java
-@GetMapping("/new-endpoint")
-public String newEndpoint() {
-    return "Response";
-}
-```
-
-3. Fügen Sie entsprechende Tests in `HelloControllerTest.java` hinzu
-4. Commit und Push - die Pipeline wird automatisch ausgeführt
-
-### Maven-Befehle
-
-```bash
-mvn clean                    # Build-Verzeichnis löschen
-mvn compile                  # Projekt kompilieren
-mvn test                     # Tests ausführen
-mvn package                  # JAR-Datei erstellen
-mvn spring-boot:run          # Anwendung starten
-mvn jib:dockerBuild         # Docker-Image bauen
-```
-
-## 🤝 Beitragen
-
-1. Fork das Repository
-2. Erstellen Sie einen Feature-Branch (`git checkout -b feature/AmazingFeature`)
-3. Committen Sie Ihre Änderungen (`git commit -m 'Add some AmazingFeature'`)
-4. Pushen Sie zum Branch (`git push origin feature/AmazingFeature`)
-5. Öffnen Sie einen Pull Request
-
-## 📄 Lizenz
-
-Dieses Projekt ist für Bildungszwecke erstellt.
-
-## 👥 Autoren
-
-Demo-Projekt für Spring Boot CI/CD mit GitHub Actions
-
-## 🔗 Weiterführende Links
-
-- [Spring Boot Dokumentation](https://spring.io/projects/spring-boot)
-- [Jib Documentation](https://github.com/GoogleContainerTools/jib)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Maven Documentation](https://maven.apache.org/)
 
 ---
 
-**Hinweis:** Stellen Sie sicher, dass Sie die GitHub Packages-Berechtigung in Ihren Repository-Einstellungen aktiviert haben, damit die Pipeline Docker-Images pushen kann.
+### 🔐 Secrets-Konfiguration für DockerHub-Pipeline
 
+Um die Docker CLI Pipeline zu verwenden, müssen Sie folgende Secrets in Ihrem GitHub-Repository konfigurieren:
+
+1. Gehen Sie zu Ihrem GitHub-Repository
+2. **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
+
+Fügen Sie folgende Secrets hinzu:
+
+| Secret Name | Beschreibung | Beispiel |
+|------------|--------------|----------|
+| `DOCKERHUB_USERNAME` | Ihr DockerHub-Benutzername | `myusername` |
+| `DOCKERHUB_TOKEN` | DockerHub Access Token | `dckr_pat_...` |
+
+**DockerHub Access Token erstellen:**
+1. Melden Sie sich bei [DockerHub](https://hub.docker.com/) an
+2. **Account Settings** → **Security** → **New Access Token**
+3. Geben Sie einen Namen ein (z.B. "GitHub Actions")
+4. Wählen Sie **Read, Write, Delete** Permissions
+5. Kopieren Sie das generierte Token
+6. Fügen Sie es als `DOCKERHUB_TOKEN` Secret in GitHub ein
+
+---
+
+### Pipeline-Vergleich
+
+| Feature | Jib Pipeline | Docker CLI Pipeline |
+|---------|--------------|---------------------|
+| Workflow-Datei | `main.yml` | `docker-cli.yml` |
+| Build-Tool | Jib | Docker CLI |
+| Target Registry | GitHub Packages (ghcr.io) | DockerHub |
+| Docker-Daemon nötig | ❌ Nein | ✅ Ja (in GitHub Runner) |
+| Build-Geschwindigkeit | ⚡ Sehr schnell | ⚡ Schnell |
+| Layer-Caching | ✅ Automatisch | ✅ GitHub Actions Cache |
+| Secrets benötigt | ❌ Nein (GITHUB_TOKEN) | ✅ Ja (DockerHub) |
+| Image-Tags | SHA + latest | Flexible (Branch, SHA, PR) |
+| Komplexität | ✅ Einfach | ⚠️ Mittel |
+
+---
+
+### Pipeline manuell auslösen
+
+Beide Pipelines können auch manuell ausgelöst werden:
+
+1. Gehen Sie zu **Actions** in Ihrem GitHub-Repository
+2. Wählen Sie die gewünschte Pipeline:
+   - "CI/CD" (Jib)
+   - "CI/CD with Docker CLI"
+3. Klicken Sie auf **Run workflow**
+4. Wählen Sie den Branch und klicken Sie auf **Run workflow**
+
+---
+
+### Beide Pipelines parallel nutzen
+
+Sie können beide Pipelines gleichzeitig aktiviert lassen. Jeder Push wird dann:
+- Ein Image zu **GitHub Packages** pushen (via Jib)
+- Ein Image zu **DockerHub** pushen (via Docker CLI)
+
+Dies ist nützlich für:
+- ✅ Redundanz (mehrere Registries)
+- ✅ Verschiedene Zielgruppen (GitHub vs. öffentlich)
+- ✅ Backup-Strategie
