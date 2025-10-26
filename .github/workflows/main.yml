@@ -1,6 +1,6 @@
-# This is a basic workflow to help you get started with Actions
+# CI/CD Pipeline for Spring Boot Application
 
-name: CI
+name: CI/CD
 
 # Controls when the workflow will run
 on:
@@ -15,22 +15,85 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  # Build and test job
   build:
-    # The type of runner that the job will run on
+    name: Build and Test
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: mvn clean verify
+      # Set up JDK 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
-      # Runs a set of commands using the runners shell
-      #- name: Run a multi-line script
-       # run: |
-        #  echo Add other actions to build,
-         # echo test, and deploy your project.
+      # Compile the project
+      - name: Compile
+        run: mvn clean compile
+
+      # Run unit tests
+      - name: Run Tests
+        run: mvn test
+
+      # Package the application
+      - name: Package
+        run: mvn package -DskipTests
+
+      # Upload artifact for next job
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
+          retention-days: 1
+
+  # Docker build and push job
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # Checks-out your repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up JDK 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # Log in to GitHub Container Registry
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build and push Docker image using Jib
+      - name: Build and push Docker image
+        run: |
+          mvn compile jib:build \
+            -Djib.to.image=ghcr.io/${{ github.repository_owner }}/demo:${{ github.sha }} \
+            -Djib.to.tags=latest \
+            -Djib.to.auth.username=${{ github.actor }} \
+            -Djib.to.auth.password=${{ secrets.GITHUB_TOKEN }}
+
+      # Output image details
+      - name: Image Details
+        run: |
+          echo "Docker image pushed to: ghcr.io/${{ github.repository_owner }}/demo:${{ github.sha }}"
+          echo "Also tagged as: ghcr.io/${{ github.repository_owner }}/demo:latest"
