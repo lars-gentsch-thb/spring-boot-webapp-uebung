@@ -7,6 +7,7 @@ FROM eclipse-temurin:17-jre-alpine
 LABEL maintainer="docker@thb.de"
 LABEL description="Spring Boot Demo Application"
 
+# Set working directory - all subsequent commands run from here
 WORKDIR /app
 
 # Copy the pre-built JAR file
