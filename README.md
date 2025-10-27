@@ -23,39 +23,6 @@ Dieses Projekt ist eine Demo-Anwendung, die folgende Technologien und Best Pract
 - Docker-Container-Build mit Jib
 - Vollautomatische CI/CD-Pipeline
 
-## 🏗️ Projektstruktur
-
-```
-.
-├── .github/
-│   └── workflows/
-│       └── main.yml          # CI/CD Pipeline Definition
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── cd/pipeline/demo/
-│   │   │       ├── DemoApplication.java      # Spring Boot Main-Klasse
-│   │   │       └── HelloController.java      # REST Controller
-│   │   └── resources/
-│   │       └── application.properties        # Anwendungskonfiguration
-│   └── test/
-│       └── java/
-│           └── cd/pipeline/demo/
-│               ├── DemoApplicationTests.java      # Context Load Test
-│               └── HelloControllerTest.java       # Controller Tests
-├── Dockerfile                # Docker Build (optional, Jib wird bevorzugt)
-├── pom.xml                  # Maven Projekt-Konfiguration
-├── JIB-USAGE.md            # Jib Dokumentation
-└── README.md               # Diese Datei
-```
-
-## 🛠️ Voraussetzungen
-
-- **Java 17** oder höher
-- **Maven 3.6+**
-- **Docker** (optional, nur für lokale Docker-Builds)
-- **Git** für Version Control
-
 ## 📦 Installation und Build
 
 ### Lokaler Build
@@ -89,7 +56,7 @@ Die Anwendung läuft dann auf: http://localhost:8080
 
 ## 🐳 Docker
 
-### Option 1: Mit Jib (empfohlen)
+### Option 1: Mit Jib
 
 Jib erstellt Docker-Images ohne Docker-Daemon - schneller und effizienter.
 
@@ -109,13 +76,6 @@ Weitere Details siehe [JIB-USAGE.md](JIB-USAGE.md)
 ### Option 2: Mit klassischem Dockerfile
 
 Der Dockerfile verwendet ein bereits gebautes JAR - Sie müssen zuerst mit Maven bauen.
-
-**Vorteile:**
-- ✅ Klare Trennung von Build und Container-Erstellung
-- ✅ Kleineres finales Image (nur JRE, kein JDK)
-- ✅ Security: Läuft als non-root User
-- ✅ Integrierter Health-Check
-- ✅ Schneller Build (nur Copy, kein Compile)
 
 **Build und Run:**
 ```bash
