@@ -10,10 +10,12 @@ public class HelloController {
 
 	@Value("${spring.application.name}")
 	String name;
+	@Value("${test.value}")
+	String testValue;
 
 	@GetMapping("/")
 	public String index() {
-		return "Greetings from " + name + "!";
+		return "Greetings from " + name + " " + testValue + "!";
 	}
 
 
