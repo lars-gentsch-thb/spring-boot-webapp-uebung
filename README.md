@@ -1,4 +1,6 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lars-gentsch-thb_spring-boot-webapp-uebung&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=lars-gentsch-thb_spring-boot-webapp-uebung)
+https://github.com/lars-gentsch-thb/spring-boot-webapp-uebung/actions/workflows/main.yml/badge.svg
+https://github.com/lars-gentsch-thb/spring-boot-webapp-uebung/actions/workflows/docker-cli.yml/badge.svg
 
 # Spring Boot Demo Application
 
