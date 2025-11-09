@@ -1,3 +1,5 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lars-gentsch-thb_spring-boot-webapp-uebung&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=lars-gentsch-thb_spring-boot-webapp-uebung)
+
 # Spring Boot Demo Application
 
 Eine einfache Spring Boot Web-Anwendung mit CI/CD-Pipeline und Docker-Integration.
