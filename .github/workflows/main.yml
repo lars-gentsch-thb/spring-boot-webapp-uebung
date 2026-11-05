@@ -26,13 +26,13 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      # Set up JDK 17
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      # Set up JDK 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
 
@@ -68,13 +68,13 @@ jobs:
     steps:
       # Checks-out your repository
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      # Set up JDK 17
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      # Set up JDK 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
 

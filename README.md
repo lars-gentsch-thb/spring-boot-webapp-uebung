@@ -11,7 +11,7 @@ Eine einfache Spring Boot Web-Anwendung mit CI/CD-Pipeline und Docker-Integratio
 Dieses Projekt ist eine Demo-Anwendung, die folgende Technologien und Best Practices demonstriert:
 
 - **Spring Boot 3.5.7** - Modernes Java-Framework für Web-Anwendungen
-- **Java 17** - LTS-Version mit moderner Java-Syntax
+- **Java 21** - LTS-Version mit moderner Java-Syntax
 - **Maven** - Build-Management und Dependency-Management
 - **JUnit 5** - Unit Testing Framework
 - **Jib** - Containerisierung ohne Docker-Daemon
@@ -40,17 +40,17 @@ cd spring-boot-webapp-uebung
 mvn clean compile
 
 # Tests ausführen
-mvn test
+./mvnw test
 
 # JAR-Datei erstellen
-mvn package
+./mvnw package
 ```
 
 ### Anwendung lokal starten
 
 ```bash
 # Mit Maven
-mvn spring-boot:run
+./mvnw spring-boot:run
 
 # Oder als JAR
 java -jar target/demo-0.0.1-SNAPSHOT.jar
@@ -59,6 +59,16 @@ java -jar target/demo-0.0.1-SNAPSHOT.jar
 Die Anwendung läuft dann auf: http://localhost:8080
 
 ## 🐳 Docker
+
+### Kurzfassung (Übung 1: Docker Image erstellen)
+
+```bash
+./mvnw package
+docker build -t webapp .
+docker run -p 8080:8080 webapp
+```
+
+Danach ist die Anwendung unter http://localhost:8080 erreichbar.
 
 ### Option 1: Mit Jib
 
@@ -102,9 +112,6 @@ docker run -d -p 8080:8080 --name demo-container demo-app:latest
 
 # Logs anzeigen
 docker logs demo-container
-
-# Health-Check Status
-docker inspect --format='{{.State.Health.Status}}' demo-container
 ```
 
 ### Docker-Befehle - Übersicht
@@ -148,11 +155,10 @@ docker push registry.example.com/demo-app:latest
 
 ### Dockerfile-Details
 
-**Base Image:** eclipse-temurin:17-jre-alpine  
+**Base Image:** eclipse-temurin:21-jre  
 **Voraussetzung:** JAR muss mit `mvn clean package` bereits gebaut sein  
-**Security:** Läuft als non-root User (spring:spring)  
-**Health-Check:** Automatische Gesundheitsprüfung alle 30 Sekunden  
-**Image-Größe:** ~200MB (Alpine-basiert)
+**Inhalt:** `target/*.jar` wird als `/app/app.jar` kopiert, Port 8080, Start mit `java -jar app.jar`  
+**Build-Kontext:** `.dockerignore` lässt nur `target/*.jar` (bzw. `build/libs/*.jar`) durch
 
 **Vergleich der Methoden:**
 
@@ -205,7 +211,7 @@ Das Projekt enthält **zwei vollautomatische GitHub Actions Pipelines**, die bei
 
 #### Job 1: Build and Test
 1. ✅ Code auschecken
-2. ✅ JDK 17 einrichten
+2. ✅ JDK 21 einrichten
 3. ✅ Projekt kompilieren
 4. ✅ Unit Tests ausführen
 5. ✅ JAR-Datei paketieren
@@ -215,7 +221,7 @@ Das Projekt enthält **zwei vollautomatische GitHub Actions Pipelines**, die bei
 (Wird nur ausgeführt, wenn Job 1 erfolgreich war)
 
 1. ✅ Code auschecken
-2. ✅ JDK 17 einrichten
+2. ✅ JDK 21 einrichten
 3. ✅ Bei GitHub Container Registry anmelden
 4. ✅ Docker-Image mit Jib bauen und pushen zu **GitHub Packages (ghcr.io)**
 5. ✅ Image-Details ausgeben
@@ -237,7 +243,7 @@ docker pull ghcr.io/<github-username>/demo:<commit-sha>
 
 #### Job 1: Build and Test
 1. ✅ Code auschecken
-2. ✅ JDK 17 einrichten
+2. ✅ JDK 21 einrichten
 3. ✅ Projekt kompilieren
 4. ✅ Unit Tests ausführen
 5. ✅ JAR-Datei paketieren

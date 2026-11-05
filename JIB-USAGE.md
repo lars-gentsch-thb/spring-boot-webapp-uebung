@@ -6,7 +6,7 @@ Das Projekt ist jetzt mit dem Jib Maven Plugin konfiguriert, um Docker-Container
 ## Konfiguration
 
 ### Image-Details
-- **Basis-Image:** eclipse-temurin:17-jre
+- **Basis-Image:** eclipse-temurin:21-jre
 - **Image-Name:** cd/pipeline/demo
 - **Tags:** 0.0.1-SNAPSHOT, latest
 - **Port:** 8080
