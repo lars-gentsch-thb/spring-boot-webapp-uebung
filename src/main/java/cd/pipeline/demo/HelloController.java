@@ -26,17 +26,18 @@ public class HelloController {
 		System.out.println(c);
 	}
 
-	@GetMapping("/mailiucous-code")
-	public String mailiucousCode() {
+	@GetMapping("/malicious-code")
+	public String maliciousCode() {
 		// This is another dead code to test code coverage tools
 		for (int i = 0; i < 10; i++) {
 			if (i % 2 == 0) {
 				System.out.println(i + " is even");
+				int a = 2 / 0;
 			} else {
 				System.out.println(i + " is odd");
 			}
 		}
-		return "This is mailiucous code";
+		return "This is malicious code";
 	}
 
 	@GetMapping("/something")
