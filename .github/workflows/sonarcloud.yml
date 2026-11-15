@@ -1,38 +1,43 @@
-name: SonarCloud
+name: SonarQube Cloud
+
+# Analyse mit dem Maven-Scanner (die frühere sonarcloud-github-action ist deprecated)
 on:
   push:
-    branches:
-      - main
+    branches: [ master ]
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
-  build:
-    name: Build
+  sonar:
+    name: Build and analyze
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0  # volle Historie für bessere Analyse (Blame, neuer Code)
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v3
+      - name: Cache für SonarQube-Cloud-Pakete
+        uses: actions/cache@v6
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-      - name: Cache Maven packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-      - name: Build and analyze
+      - name: Bauen, testen und analysieren
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=lars-gentsch-thb_spring-boot-webapp-uebung
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::warning::Secret SONAR_TOKEN fehlt, Analyse wird übersprungen."
+            exit 0
+          fi
+          # sonar.organization und sonar.projectKey stehen in der pom.xml
+          ./mvnw -B verify sonar:sonar

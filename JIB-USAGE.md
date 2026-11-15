@@ -16,19 +16,19 @@ Das Projekt ist jetzt mit dem Jib Maven Plugin konfiguriert, um Docker-Container
 
 ### 1. Docker-Image in lokalen Docker-Daemon bauen
 ```bash
-mvn clean compile jib:dockerBuild
+./mvnw clean compile jib:dockerBuild
 ```
 Erstellt das Image und lädt es in Ihren lokalen Docker-Daemon.
 
 ### 2. Direkt in Registry pushen (ohne Docker)
 ```bash
-mvn clean compile jib:build
+./mvnw clean compile jib:build
 ```
 Erstellt das Image und pusht es direkt in eine Container-Registry (keine Docker-Installation erforderlich).
 
 ### 3. Als Tar-Datei exportieren
 ```bash
-mvn clean compile jib:buildTar
+./mvnw clean compile jib:buildTar
 ```
 Erstellt eine Tar-Datei des Images im `target/jib-image.tar` Verzeichnis.
 
@@ -68,7 +68,7 @@ In der `pom.xml` unter `<configuration><to><image>` können Sie den Image-Namen 
 Für private Registries können Sie Credentials konfigurieren:
 
 ```bash
-mvn compile jib:build -Djib.to.auth.username=<username> -Djib.to.auth.password=<password>
+./mvnw compile jib:build -Djib.to.auth.username=<username> -Djib.to.auth.password=<password>
 ```
 
 Oder in der `pom.xml`:
@@ -101,6 +101,6 @@ Stellen Sie sicher, dass Docker läuft und Sie die entsprechenden Berechtigungen
 
 ### Build-Cache löschen
 ```bash
-mvn clean
+./mvnw clean
 ```
 

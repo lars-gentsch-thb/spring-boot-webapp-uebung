@@ -10,10 +10,10 @@ Eine einfache Spring Boot Web-Anwendung mit CI/CD-Pipeline und Docker-Integratio
 
 Dieses Projekt ist eine Demo-Anwendung, die folgende Technologien und Best Practices demonstriert:
 
-- **Spring Boot 3.5.7** - Modernes Java-Framework für Web-Anwendungen
+- **Spring Boot 4.1** (4.1.2) - Modernes Java-Framework für Web-Anwendungen (Starter `spring-boot-starter-webmvc`)
 - **Java 21** - LTS-Version mit moderner Java-Syntax
-- **Maven** - Build-Management und Dependency-Management
-- **JUnit 5** - Unit Testing Framework
+- **Maven** über den Maven Wrapper (`./mvnw`, keine lokale Maven-Installation nötig) - Build- und Dependency-Management
+- **JUnit Jupiter 6** - Testing Framework (Tests mit MockMvc, Starter `spring-boot-starter-webmvc-test`)
 - **Jib** - Containerisierung ohne Docker-Daemon
 - **GitHub Actions** - Automatisierte CI/CD-Pipeline
 - **GitHub Packages** - Container Registry für Docker-Images
@@ -23,7 +23,7 @@ Dieses Projekt ist eine Demo-Anwendung, die folgende Technologien und Best Pract
 - REST-API mit zwei Endpoints:
   - `GET /` - Begrüßungsnachricht
   - `GET /something` - Status-Endpoint
-- Automatisierte Tests mit JUnit 5
+- Automatisierte Tests mit JUnit Jupiter 6 und MockMvc
 - Docker-Container-Build mit Jib
 - Vollautomatische CI/CD-Pipeline
 
@@ -31,19 +31,24 @@ Dieses Projekt ist eine Demo-Anwendung, die folgende Technologien und Best Pract
 
 ### Lokaler Build
 
+**Voraussetzung:** JDK 21 (z. B. Eclipse Temurin 21). Maven muss nicht installiert sein, der Maven Wrapper (`./mvnw`, unter Windows `mvnw.cmd`) lädt die passende Maven-Version selbst.
+
 ```bash
 # Projekt klonen
 git clone <repository-url>
 cd spring-boot-webapp-uebung
 
 # Kompilieren
-mvn clean compile
+./mvnw clean compile
 
 # Tests ausführen
 ./mvnw test
 
 # JAR-Datei erstellen
 ./mvnw package
+
+# Alles in einem: bauen, testen, JaCoCo-Report (wie in der CI)
+./mvnw -B verify
 ```
 
 ### Anwendung lokal starten
@@ -76,13 +81,13 @@ Jib erstellt Docker-Images ohne Docker-Daemon - schneller und effizienter.
 
 ```bash
 # Docker-Image in lokalen Docker-Daemon bauen
-mvn compile jib:dockerBuild
+./mvnw compile jib:dockerBuild
 
 # Direkt zu Registry pushen (ohne Docker)
-mvn compile jib:build
+./mvnw compile jib:build
 
 # Als Tar-Datei exportieren
-mvn compile jib:buildTar
+./mvnw compile jib:buildTar
 ```
 
 Weitere Details siehe [JIB-USAGE.md](JIB-USAGE.md)
@@ -94,7 +99,7 @@ Der Dockerfile verwendet ein bereits gebautes JAR - Sie müssen zuerst mit Maven
 **Build und Run:**
 ```bash
 # Schritt 1: JAR mit Maven bauen
-mvn clean package
+./mvnw clean package
 
 # Schritt 2: Docker-Image erstellen
 docker build -t demo-app:latest .
@@ -118,7 +123,7 @@ docker logs demo-container
 
 ```bash
 # JAR bauen und Docker-Image erstellen
-mvn clean package
+./mvnw clean package
 docker build -t demo-app:latest .
 
 # Alle Images anzeigen
@@ -156,7 +161,7 @@ docker push registry.example.com/demo-app:latest
 ### Dockerfile-Details
 
 **Base Image:** eclipse-temurin:21-jre  
-**Voraussetzung:** JAR muss mit `mvn clean package` bereits gebaut sein  
+**Voraussetzung:** JAR muss mit `./mvnw clean package` bereits gebaut sein  
 **Inhalt:** `target/*.jar` wird als `/app/app.jar` kopiert, Port 8080, Start mit `java -jar app.jar`  
 **Build-Kontext:** `.dockerignore` lässt nur `target/*.jar` (bzw. `build/libs/*.jar`) durch
 

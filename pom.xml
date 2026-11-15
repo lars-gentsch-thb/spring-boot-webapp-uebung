@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.7</version>
+		<version>4.1.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -22,12 +22,23 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>21</java.version>
+
+		<!-- SonarQube Cloud (Analyse per ./mvnw verify sonar:sonar) -->
+		<sonar.organization>lars-gentsch-thb</sonar.organization>
+		<sonar.projectKey>lars-gentsch-thb_spring-boot-webapp-uebung</sonar.projectKey>
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+
+		<!-- Plugin-Versionen (Surefire/Compiler verwaltet Spring Boot) -->
+		<jib-maven-plugin.version>3.5.2</jib-maven-plugin.version>
+		<jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
+		<sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
 	</properties>
 
 	<dependencies>
+		<!-- Spring Boot 4: Nachfolger von spring-boot-starter-web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
 		<dependency>
@@ -35,10 +46,26 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Spring Boot 4: modularer Test-Starter für Spring MVC (MockMvc) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<!-- erlaubt den Kurzaufruf ./mvnw sonar:sonar -->
+				<plugin>
+					<groupId>org.sonarsource.scanner.maven</groupId>
+					<artifactId>sonar-maven-plugin</artifactId>
+					<version>${sonar-maven-plugin.version}</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -59,7 +86,7 @@
 			<plugin>
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>jib-maven-plugin</artifactId>
-				<version>3.4.6</version>
+				<version>${jib-maven-plugin.version}</version>
 				<configuration>
 					<from>
 						<image>eclipse-temurin:21-jre</image>
@@ -87,7 +114,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.12</version>
+				<version>${jacoco-maven-plugin.version}</version>
 				<executions>
 					<execution>
 						<id>prepare-agent</id>

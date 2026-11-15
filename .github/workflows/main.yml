@@ -38,15 +38,15 @@ jobs:
 
       # Compile the project
       - name: Compile
-        run: mvn clean compile
+        run: ./mvnw -B clean compile
 
       # Run unit tests
       - name: Run Tests
-        run: mvn test
+        run: ./mvnw -B test
 
       # Package the application
       - name: Package
-        run: mvn package -DskipTests
+        run: ./mvnw -B package -DskipTests
 
       # Upload artifact for next job
       - name: Upload build artifact
@@ -80,7 +80,7 @@ jobs:
 
       # Log in to GitHub Container Registry
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -89,7 +89,7 @@ jobs:
       # Build and push Docker image using Jib
       - name: Build and push Docker image
         run: |
-          mvn compile jib:build \
+          ./mvnw -B compile jib:build \
             -Djib.to.image=ghcr.io/${{ github.repository_owner }}/demo:${{ github.sha }} \
             -Djib.to.tags=latest \
             -Djib.to.auth.username=${{ github.actor }} \
