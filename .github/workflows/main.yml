@@ -61,6 +61,8 @@ jobs:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
     needs: build
+    # Pushen nur bei push, nicht bei PRs (z. B. Dependabot)
+    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
